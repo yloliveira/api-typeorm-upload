@@ -1,6 +1,7 @@
-import { getRepository } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 import AppError from '../errors/AppError';
 import Transaction from '../models/Transaction';
+import TransactionRepository from '../repositories/TransactionsRepository';
 
 interface Request {
   title: string;
@@ -20,7 +21,7 @@ export default class CreateTransactionService {
 
   public async execute(request: Request): Promise<Transaction> {
     this.validateRequest(request);
-    const transactionRepository = getRepository(Transaction);
+    const transactionRepository = getCustomRepository(TransactionRepository);
     const transaction = transactionRepository.create(request);
     await transactionRepository.save(transaction);
     return transaction;
