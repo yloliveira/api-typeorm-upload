@@ -16,8 +16,12 @@ export default class CreateCategoryService {
   public async execute({ title }: Request): Promise<Category> {
     this.validateRequest({ title });
     const categoryRepository = getRepository(Category);
-    const category = categoryRepository.create({ title });
-    await categoryRepository.save(category);
+    let category = await categoryRepository.findOne({ where: { title } });
+
+    if (!category) {
+      category = categoryRepository.create({ title });
+      await categoryRepository.save(category);
+    }
     return category;
   }
 }
