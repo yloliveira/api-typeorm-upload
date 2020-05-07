@@ -22,6 +22,12 @@ export default class CreateTransactionService {
   public async execute(request: Request): Promise<Transaction> {
     this.validateRequestFields(request);
     const transactionRepository = getCustomRepository(TransactionRepository);
+
+    const { total } = await transactionRepository.getBalance();
+    if (request.type === 'outcome' && request.value > total) {
+      throw new AppError('No valid balance for this transaction.');
+    }
+
     const transaction = transactionRepository.create(request);
     await transactionRepository.save(transaction);
     return transaction;
