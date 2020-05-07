@@ -11,7 +11,7 @@ interface Request {
 }
 
 export default class CreateTransactionService {
-  private validateRequest(request: Request): void {
+  private validateRequestFields(request: Request): void {
     const { title, value, type, category_id } = request;
     const types = ['income', 'outcome'];
     if (!title || !value || !types.includes(type) || !category_id) {
@@ -20,7 +20,7 @@ export default class CreateTransactionService {
   }
 
   public async execute(request: Request): Promise<Transaction> {
-    this.validateRequest(request);
+    this.validateRequestFields(request);
     const transactionRepository = getCustomRepository(TransactionRepository);
     const transaction = transactionRepository.create(request);
     await transactionRepository.save(transaction);

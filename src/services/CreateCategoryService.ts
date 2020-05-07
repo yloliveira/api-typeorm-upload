@@ -7,14 +7,14 @@ interface Request {
 }
 
 export default class CreateCategoryService {
-  private validateRequest({ title }: Request): void {
+  private validateRequestFields({ title }: Request): void {
     if (!title) {
       throw new AppError('Invalid entries');
     }
   }
 
   public async execute({ title }: Request): Promise<Category> {
-    this.validateRequest({ title });
+    this.validateRequestFields({ title });
     const categoryRepository = getRepository(Category);
     let category = await categoryRepository.findOne({ where: { title } });
 
