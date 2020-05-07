@@ -1,27 +1,28 @@
+import { getRepository } from 'typeorm';
 import AppError from '../errors/AppError';
-
 import Transaction from '../models/Transaction';
 
 interface Request {
   title: string;
   value: number;
   type: 'income' | 'outcome';
-  category: string;
+  category_id: string;
 }
 
-class CreateTransactionService {
-  private validateRequest(request: Request): boolean {
-    const { title, value, type, category } = request;
+export default class CreateTransactionService {
+  private validateRequest(request: Request): void {
+    const { title, value, type, category_id } = request;
     const types = ['income', 'outcome'];
-    return !!title && !!value && types.includes(type) && !!category;
-  }
-
-  public async execute(request: Request): Promise<void> {
-    const requestFieldsAreValid = this.validateRequest(request);
-    if (!requestFieldsAreValid) {
+    if (!title || !value || !types.includes(type) || !category_id) {
       throw new AppError('Invalid entries');
     }
   }
-}
 
-export default CreateTransactionService;
+  public async execute(request: Request): Promise<Transaction> {
+    this.validateRequest(request);
+    const transactionRepository = getRepository(Transaction);
+    const transaction = transactionRepository.create(request);
+    await transactionRepository.save(transaction);
+    return transaction;
+  }
+}
