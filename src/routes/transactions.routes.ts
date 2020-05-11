@@ -5,9 +5,8 @@ import uploadConfig from '../config/upload';
 
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import CreateTransactionService from '../services/CreateTransactionService';
-import CreateCategoryService from '../services/CreateCategoryService';
 import DeleteTransactionService from '../services/DeleteTransactionService';
-// import ImportTransactionsService from '../services/ImportTransactionsService';
+import ImportTransactionsService from '../services/ImportTransactionsService';
 
 const transactionsRouter = Router();
 const upload = multer(uploadConfig);
@@ -41,7 +40,13 @@ transactionsRouter.post(
   '/import',
   upload.single('file'),
   async (request, response) => {
-    return response.json({ ok: true });
+    const { filename, mimetype } = request.file;
+    const importTransaction = new ImportTransactionsService();
+    const transactions = await importTransaction.execute({
+      filename,
+      mimetype,
+    });
+    return response.json(transactions);
   },
 );
 
