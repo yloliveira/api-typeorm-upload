@@ -105,15 +105,18 @@ class ImportTransactionsService {
     const newTransactions = transactionRepository.create(
       transactions.map(transaction => {
         const { title, type, value, category } = transaction;
-        const { id } = newCategories.find(cat => cat.title === category);
-        if (!id) {
+        const existentCategory = newCategories.find(
+          cat => cat.title === category,
+        );
+
+        if (!existentCategory) {
           throw new AppError('Category not found');
         }
         return {
           title,
           type,
           value,
-          category_id: id,
+          category_id: existentCategory.id,
         };
       }),
     );
