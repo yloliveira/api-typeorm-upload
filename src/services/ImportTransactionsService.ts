@@ -2,6 +2,7 @@ import csvParse from 'csv-parse';
 import fs from 'fs';
 import path from 'path';
 import { getRepository, In, getCustomRepository } from 'typeorm';
+import AppError from '../errors/AppError';
 import Transaction from '../models/Transaction';
 import uploadConfig from '../config/upload';
 import Category from '../models/Category';
@@ -25,9 +26,25 @@ interface LoadCSV {
 }
 
 class ImportTransactionsService {
+  private validateFile({ filename, mimetype }: Request): void {
+    if (!filename || mimetype !== 'text/csv') {
+      throw new AppError('Invalid file');
+    }
+  }
+
+  private validateFileColumns(transactions: CreateTransaction[]): void {
+    transactions.forEach(transaction => {
+      const { title, value, type, category } = transaction;
+      const types = ['income', 'outcome'];
+      if (!title || !value || !types.includes(type) || !category) {
+        throw new AppError('Invalid entries, check your file');
+      }
+    });
+  }
+
   private async loadCSV(req: Request): Promise<LoadCSV> {
-    const { filename, mimetype } = req;
-    const csvFilePath = path.resolve(uploadConfig.directory, filename);
+    this.validateFile(req);
+    const csvFilePath = path.resolve(uploadConfig.directory, req.filename);
     const readCSVStream = fs.createReadStream(csvFilePath);
     const parseStream = csvParse({
       from_line: 2,
@@ -81,6 +98,7 @@ class ImportTransactionsService {
 
   async execute(req: Request): Promise<Transaction[]> {
     const { transactions, categories } = await this.loadCSV(req);
+    this.validateFileColumns(transactions);
     const newCategories = await this.createCategories(categories);
     const transactionRepository = getCustomRepository(TransactionRepository);
 
@@ -88,6 +106,9 @@ class ImportTransactionsService {
       transactions.map(transaction => {
         const { title, type, value, category } = transaction;
         const { id } = newCategories.find(cat => cat.title === category);
+        if (!id) {
+          throw new AppError('Category not found');
+        }
         return {
           title,
           type,
