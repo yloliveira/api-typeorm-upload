@@ -21,15 +21,12 @@ transactionsRouter.get('/', async (request, response) => {
 
 transactionsRouter.post('/', async (request, response) => {
   const { title, value, type, category } = request.body;
-  const createCategory = new CreateCategoryService();
-  const { id: category_id } = await createCategory.execute({ title: category });
-
   const createTransaction = new CreateTransactionService();
   const transaction = await createTransaction.execute({
     title,
     value,
     type,
-    category_id,
+    category,
   });
   return response.json(transaction);
 });
